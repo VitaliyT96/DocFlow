@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package docflow;
+
+// ── Document Processing Service ─────────────────────────
+// Full implementation will be added in the gRPC task.
+// This placeholder ensures the proto file is valid and
+// can be loaded by @grpc/proto-loader during bootstrapping.
+
+service DocumentProcessingService {
+  // Initiates document processing and returns the job ID
+  rpc ProcessDocument (ProcessDocumentRequest) returns (ProcessDocumentResponse);
+
+  // Retrieves the current processing status
+  rpc GetProcessingStatus (GetProcessingStatusRequest) returns (GetProcessingStatusResponse);
+}
+
+// ── Messages ────────────────────────────────────────────
+
+message ProcessDocumentRequest {
+  string document_id = 1;
+  string file_path = 2;
+  string mime_type = 3;
+}
+
+message ProcessDocumentResponse {
+  string job_id = 1;
+  string status = 2;
+}
+
+message GetProcessingStatusRequest {
+  string job_id = 1;
+}
+
+message GetProcessingStatusResponse {
+  string job_id = 1;
+  string status = 2;
+  int32 progress = 3;
+  string error_message = 4;
+}
