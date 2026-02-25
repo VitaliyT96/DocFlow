@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DatabaseModule } from '@docflow/database';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -50,6 +51,9 @@ import { HealthModule } from './health/health.module';
         logging: configService.get<string>('NODE_ENV') !== 'production',
       }),
     }),
+
+    // ── Shared Database Repositories ─────────────────────
+    DatabaseModule.forFeature(),
 
     // ── Feature Modules ───────────────────────────────────
     HealthModule,
