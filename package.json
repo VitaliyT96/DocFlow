@@ -22,7 +22,12 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yaml,yml}\"",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
-    "docker:logs": "docker compose logs -f"
+    "docker:logs": "docker compose logs -f",
+    "migration:generate": "pnpm --filter @docflow/database migration:generate",
+    "migration:run": "pnpm --filter @docflow/database migration:run",
+    "migration:revert": "pnpm --filter @docflow/database migration:revert",
+    "migration:show": "pnpm --filter @docflow/database migration:show",
+    "seed": "pnpm --filter @docflow/database seed"
   },
   "devDependencies": {
     "prettier": "^3.4.2",

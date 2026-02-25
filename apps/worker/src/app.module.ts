@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DatabaseModule } from '@docflow/database';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -29,6 +30,9 @@ import { HealthModule } from './health/health.module';
         logging: configService.get<string>('NODE_ENV') !== 'production',
       }),
     }),
+
+    // ── Shared Database Repositories ─────────────────────
+    DatabaseModule.forFeature(),
 
     // ── Feature Modules ───────────────────────────────────
     HealthModule,
