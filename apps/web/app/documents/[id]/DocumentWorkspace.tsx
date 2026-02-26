@@ -1,25 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSubscription, gql } from '@apollo/client';
-
-const ANNOTATION_SUBSCRIPTION = gql`
-  subscription OnAnnotationAdded($documentId: String!) {
-    annotationAdded(documentId: $documentId) {
-      id
-      text
-      positionX
-      positionY
-    }
-  }
-`;
-
-export interface Annotation {
-  id: string;
-  text: string;
-  positionX: number;
-  positionY: number;
-}
+import { useRef, MouseEvent } from 'react';
+import { useProcessingProgress } from '../../../hooks/useProcessingProgress';
+import { useDocumentAnnotations, Annotation } from '../../../hooks/useDocumentAnnotations';
+import { ProcessingProgress } from '../../../components/ProcessingProgress';
 
 export interface DocumentData {
   id: string;
@@ -33,45 +17,30 @@ interface DocWorkspaceProps {
 }
 
 export function DocumentWorkspace({ initialDocument }: DocWorkspaceProps) {
-  const [status, setStatus] = useState<string>(initialDocument.status);
-  const [progress, setProgress] = useState<{ percent: number, stage: string } | null>(null);
-  const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  
-  useEffect(() => {
-    if (status !== 'PROCESSING' && status !== 'PENDING') return;
+  const { status, progress, error: sseError } = useProcessingProgress(initialDocument.id, initialDocument.status);
+  const { cursors, annotations, connected, moveCursor, addAnnotation } = useDocumentAnnotations(initialDocument.id, []);
 
-    const sseUrl = `${process.env.NEXT_PUBLIC_API_REST_URL || 'http://localhost:3000'}/progress/${initialDocument.id}`;
-    const eventSource = new EventSource(sseUrl);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = Math.max(0, e.clientX - rect.left);
+    const y = Math.max(0, e.clientY - rect.top);
+    moveCursor(x, y);
+  };
+
+  const handleDoubleClick = (e: MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = Math.max(0, e.clientX - rect.left);
+    const y = Math.max(0, e.clientY - rect.top);
     
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        setProgress({ percent: data.percent, stage: data.stage });
-        
-        if (data.percent === 100 || data.stage === 'COMPLETED') {
-          setStatus('COMPLETED');
-          eventSource.close();
-        }
-      } catch (err) {
-        console.error("Failed to parse SSE payload", err);
-      }
-    };
-    
-    eventSource.onerror = () => {
-      console.warn('SSE stream lost. Retrying backing off handled by EventSource natively.');
-    };
-
-    return () => eventSource.close();
-  }, [initialDocument.id, status]);
-
-  const { error: wsError } = useSubscription(ANNOTATION_SUBSCRIPTION, {
-    variables: { documentId: initialDocument.id },
-    onSubscriptionData: ({ subscriptionData }) => {
-      if (subscriptionData.data?.annotationAdded) {
-        setAnnotations(prev => [...prev, subscriptionData.data.annotationAdded]);
-      }
+    const content = window.prompt('Enter annotation text:');
+    if (content && content.trim()) {
+      addAnnotation(content.trim(), x, y);
     }
-  });
+  };
 
   return (
     <div className="p-6 flex-1 flex flex-col max-w-7xl mx-auto w-full">
@@ -84,38 +53,50 @@ export function DocumentWorkspace({ initialDocument }: DocWorkspaceProps) {
         </h1>
       </header>
        
-      {['PROCESSING', 'PENDING'].includes(status) && progress && (
-        <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg shadow-sm">
-          <div className="flex justify-between text-sm font-semibold text-blue-800 mb-2">
-            <span>{progress.stage}</span>
-            <span>{progress.percent}%</span>
-          </div>
-          <div className="w-full bg-blue-200 rounded-full h-2">
-            <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out" 
-              style={{ width: `${progress.percent}%` }}
-            />
-          </div>
-        </div>
-      )}
+      <ProcessingProgress status={status} progress={progress} error={sseError} />
        
-      <main className="mt-6 flex-1 bg-white relative border border-slate-200 shadow-sm rounded-lg overflow-hidden flex flex-col">
-        {wsError && (
-          <div className="absolute top-0 right-0 p-2 m-2 bg-red-100 text-red-700 text-xs rounded shadow">
-            Collaboration Offline: Cannot connect to WS
+      <main 
+        ref={containerRef}
+        onMouseMove={handleMouseMove}
+        onDoubleClick={handleDoubleClick}
+        className="mt-6 flex-1 bg-white relative border border-slate-200 shadow-sm rounded-lg overflow-hidden flex flex-col cursor-crosshair"
+      >
+        {!connected && (
+          <div className="absolute top-0 right-0 z-50 p-2 m-2 bg-red-100 text-red-700 text-xs rounded shadow">
+             Collaboration Offline: Disconnected
           </div>
         )}
+        
         <div className="p-8 prose max-w-none text-slate-800">
            {initialDocument.content || 'Document content is empty or still processing...'}
         </div>
         
-        {annotations.map((ann, idx) => (
+        {/* Render Annotations */}
+        {annotations.map((ann: Annotation, idx: number) => (
           <div 
             key={ann.id || idx}
             className="absolute z-10 bg-yellow-100 border border-yellow-300 text-yellow-900 text-sm p-3 shadow-md rounded-md cursor-pointer hover:bg-yellow-200 transition-colors max-w-[200px]" 
-            style={{ left: `${ann.positionX}px`, top: `${ann.positionY}px` }}
+            style={{ left: `${ann.positionX || ann.x || 0}px`, top: `${ann.positionY || ann.y || 0}px` }}
           >
-            {ann.text}
+            {ann.text || ann.content || ''}
+          </div>
+        ))}
+
+        {/* Render Live Cursors */}
+        {Object.values(cursors).map((cursor) => (
+          <div
+            key={cursor.clientId}
+            className="absolute z-20 pointer-events-none transition-all duration-100 ease-linear"
+            style={{ 
+              left: `${cursor.x}px`, 
+              top: `${cursor.y}px`,
+              transform: 'translate(-50%, -50%)'
+            }}
+          >
+            <div className="w-4 h-4 rounded-full bg-blue-500 opacity-75 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+            <div className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-md mt-1 whitespace-nowrap shadow-sm">
+              User {cursor.clientId.substring(0, 4)}
+            </div>
           </div>
         ))}
       </main>
