@@ -1,4 +1,3 @@
-
 services:
   # ─── PostgreSQL ──────────────────────────────────────────
   postgres:
@@ -60,12 +59,37 @@ services:
     networks:
       - docflow-network
 
+  # ─── MinIO (S3-compatible object store) ─────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: docflow-minio
+    restart: unless-stopped
+    ports:
+      - '${MINIO_PORT:-9000}:9000' # S3 API
+      - '9001:9001' # Web Console
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin_secret}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ':9001'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - docflow-network
+
 volumes:
   postgres_data:
     driver: local
   redis_data:
     driver: local
   pgadmin_data:
+    driver: local
+  minio_data:
     driver: local
 
 networks:
