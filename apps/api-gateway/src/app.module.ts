@@ -10,6 +10,7 @@ import { GrpcClientModule } from './grpc/grpc-client.module';
 import { DocumentsModule } from './documents/documents.module';
 import { ProgressModule } from './progress/progress.module';
 import { GraphqlApiModule } from './graphql/graphql-api.module';
+import { AnnotationsModule } from './documents/annotations/annotations.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { GraphqlApiModule } from './graphql/graphql-api.module';
     DocumentsModule,
     ProgressModule,
     GraphqlApiModule,
+    AnnotationsModule,
   ],
 })
 export class AppModule {}

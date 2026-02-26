@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { RedisIoAdapter } from './redis-io.adapter';
 
 async function bootstrap(): Promise<void> {
   const logger = new Logger('Bootstrap');
@@ -32,6 +33,11 @@ async function bootstrap(): Promise<void> {
     origin: corsOrigin,
     credentials: true,
   });
+
+  // ── WebSockets ──────────────────────────────────────────
+  const redisIoAdapter = new RedisIoAdapter(app);
+  await redisIoAdapter.connectToRedis();
+  app.useWebSocketAdapter(redisIoAdapter);
 
   // ── Start ─────────────────────────────────────────────
   const port = configService.get<number>('API_GATEWAY_PORT', 4000);
