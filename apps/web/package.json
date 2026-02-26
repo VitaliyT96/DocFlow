@@ -9,12 +9,20 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@apollo/client": "3",
+    "clsx": "^2.1.1",
+    "graphql": "^16.10.0",
+    "graphql-ws": "^6.0.7",
+    "js-cookie": "^3.0.5",
+    "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
