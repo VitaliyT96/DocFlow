@@ -7,6 +7,11 @@
     "build": "tsc --project tsconfig.json",
     "lint": "echo 'No lint configured for proto'"
   },
+  "dependencies": {
+    "@nestjs/microservices": "^10.4.15",
+    "@grpc/grpc-js": "^1.12.5",
+    "rxjs": "^7.8.1"
+  },
   "devDependencies": {
     "@types/node": "^22.10.7",
     "typescript": "^5.7.3"

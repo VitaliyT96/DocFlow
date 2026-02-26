@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseModule } from '@docflow/database';
 import { HealthModule } from './health/health.module';
+import { DocumentProcessingModule } from './document-processing/document-processing.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { HealthModule } from './health/health.module';
 
     // ── Feature Modules ───────────────────────────────────
     HealthModule,
+    DocumentProcessingModule,
   ],
 })
 export class AppModule {}

@@ -2,39 +2,48 @@ syntax = "proto3";
 
 package docflow;
 
+import "google/protobuf/timestamp.proto";
+
 // ── Document Processing Service ─────────────────────────
-// Full implementation will be added in the gRPC task.
-// This placeholder ensures the proto file is valid and
-// can be loaded by @grpc/proto-loader during bootstrapping.
+// Handles document processing requests from api-gateway to worker.
+//
+// - ProcessDocument: unary RPC to initiate processing
+// - GetProgress: server-streaming RPC to receive real-time progress updates
 
 service DocumentProcessingService {
-  // Initiates document processing and returns the job ID
+  // Initiates document processing. Creates a ProcessingJob and returns the job ID.
+  // The worker will begin processing asynchronously after accepting the request.
   rpc ProcessDocument (ProcessDocumentRequest) returns (ProcessDocumentResponse);
 
-  // Retrieves the current processing status
-  rpc GetProcessingStatus (GetProcessingStatusRequest) returns (GetProcessingStatusResponse);
+  // Subscribes to real-time progress updates for a processing job.
+  // The server streams ProgressUpdate messages until the job reaches a terminal
+  // state (COMPLETED or FAILED), then closes the stream.
+  rpc GetProgress (GetProgressRequest) returns (stream ProgressUpdate);
 }
 
-// ── Messages ────────────────────────────────────────────
+// ── Request / Response Messages ─────────────────────────
 
 message ProcessDocumentRequest {
   string document_id = 1;
-  string file_path = 2;
-  string mime_type = 3;
+  string user_id = 2;
+  string file_path = 3;
+  string mime_type = 4;
 }
 
 message ProcessDocumentResponse {
   string job_id = 1;
   string status = 2;
+  google.protobuf.Timestamp accepted_at = 3;
 }
 
-message GetProcessingStatusRequest {
+message GetProgressRequest {
   string job_id = 1;
 }
 
-message GetProcessingStatusResponse {
+message ProgressUpdate {
   string job_id = 1;
-  string status = 2;
-  int32 progress = 3;
-  string error_message = 4;
+  string status = 2;          // pending | running | completed | failed
+  int32 progress = 3;         // 0–100 percentage
+  string error_message = 4;   // populated only when status == "failed"
+  google.protobuf.Timestamp updated_at = 5;
 }
