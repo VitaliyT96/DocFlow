@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { GrpcClientModule } from './grpc/grpc-client.module';
 import { DocumentsModule } from './documents/documents.module';
 import { ProgressModule } from './progress/progress.module';
+import { GraphqlApiModule } from './graphql/graphql-api.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { ProgressModule } from './progress/progress.module';
     GrpcClientModule,
     DocumentsModule,
     ProgressModule,
+    GraphqlApiModule,
   ],
 })
 export class AppModule {}
