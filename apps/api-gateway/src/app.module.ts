@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseModule } from '@docflow/database';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
+import { GrpcClientModule } from './grpc/grpc-client.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { AuthModule } from './auth/auth.module';
     // ── Feature Modules ───────────────────────────────────
     HealthModule,
     AuthModule,
+    GrpcClientModule,
   ],
 })
 export class AppModule {}

@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
-import { join } from 'path';
+import { DOCUMENT_PROTO_PATH, DOCFLOW_PACKAGE_NAME } from '@docflow/proto';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
@@ -22,8 +22,8 @@ async function bootstrap(): Promise<void> {
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.GRPC,
     options: {
-      package: 'docflow',
-      protoPath: join(__dirname, '../../../libs/proto/src/document.proto'),
+      package: DOCFLOW_PACKAGE_NAME,
+      protoPath: DOCUMENT_PROTO_PATH,
       url: `${grpcHost}:${grpcPort}`,
     },
   });

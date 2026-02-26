@@ -27,7 +27,8 @@
     "bullmq": "^5.34.8",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "@docflow/database": "workspace:*"
+    "@docflow/database": "workspace:*",
+    "@docflow/proto": "workspace:*"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.4.9",
