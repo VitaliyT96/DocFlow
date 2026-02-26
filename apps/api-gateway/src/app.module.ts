@@ -7,6 +7,7 @@ import { DatabaseModule } from '@docflow/database';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { GrpcClientModule } from './grpc/grpc-client.module';
+import { DocumentsModule } from './documents/documents.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { GrpcClientModule } from './grpc/grpc-client.module';
     HealthModule,
     AuthModule,
     GrpcClientModule,
+    DocumentsModule,
   ],
 })
 export class AppModule {}
