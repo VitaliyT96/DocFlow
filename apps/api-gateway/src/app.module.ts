@@ -5,6 +5,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseModule } from '@docflow/database';
 import { HealthModule } from './health/health.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { HealthModule } from './health/health.module';
 
     // ── Feature Modules ───────────────────────────────────
     HealthModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
