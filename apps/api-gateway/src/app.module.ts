@@ -8,6 +8,7 @@ import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { GrpcClientModule } from './grpc/grpc-client.module';
 import { DocumentsModule } from './documents/documents.module';
+import { ProgressModule } from './progress/progress.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { DocumentsModule } from './documents/documents.module';
     AuthModule,
     GrpcClientModule,
     DocumentsModule,
+    ProgressModule,
   ],
 })
 export class AppModule {}

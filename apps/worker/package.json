@@ -28,7 +28,8 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "@docflow/database": "workspace:*",
-    "@docflow/proto": "workspace:*"
+    "@docflow/proto": "workspace:*",
+    "@docflow/redis": "workspace:*"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.4.9",
