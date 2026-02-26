@@ -7,8 +7,6 @@ import {
   Res,
   UseGuards,
   Logger,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from '../auth';
@@ -20,12 +18,19 @@ import { ProgressSseService } from './progress-sse.service';
  * Route: GET /documents/:jobId/progress
  *
  * Response: text/event-stream (SSE).
- * Each event is a JSON-encoded ProgressEvent on the `data` field:
- *   data: {"jobId":"...","status":"RUNNING","progress":42,...}\n\n
+ *
+ * Each event uses the SSE spec's `event:` and `id:` fields:
+ *   id: 1
+ *   event: progress
+ *   data: {"jobId":"...","percent":42,"stage":"RUNNING","message":"..."}
  *
  * The stream terminates when:
  *   - The job reaches COMPLETED or FAILED status
  *   - The client disconnects
+ *   - The max stream lifetime (5 min) is exceeded
+ *
+ * If the jobId does not exist, a 404 JSON response is returned immediately
+ * (no SSE stream is opened).
  *
  * Authentication:
  *   All requests require a valid JWT (Authorization: Bearer <token>).
@@ -54,20 +59,24 @@ export class ProgressController {
    *   Cache-Control: no-cache
    *   Connection: keep-alive
    *   X-Accel-Buffering: no   — disables nginx response buffering
+   *
+   * If the job is not found, the service sends a 404 JSON response
+   * instead of opening an SSE stream.
    */
   @Get(':jobId/progress')
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  streamProgress(
+  async streamProgress(
     @Param('jobId', new ParseUUIDPipe({ version: '4' })) jobId: string,
     @Req() req: Request,
     @Res() res: Response,
-  ): void {
+  ): Promise<void> {
     this.logger.log(
-      `SSE connection for job ${jobId} from ${req.ip ?? 'unknown'}`,
+      `SSE connection request for job ${jobId} from ${req.ip ?? 'unknown'}`,
     );
 
     // ── SSE headers ─────────────────────────────────────────
+    // Set headers before the service writes any data.
+    // If the job doesn't exist, the service will override with 404.
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -77,6 +86,6 @@ export class ProgressController {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.flushHeaders();
 
-    this.progressSseService.streamProgress(jobId, res);
+    await this.progressSseService.streamProgress(jobId, res);
   }
 }
