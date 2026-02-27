@@ -19,8 +19,10 @@ RUN pnpm install --frozen-lockfile --filter worker...
 # Copy source
 COPY apps/worker/ apps/worker/
 
-# Build
-RUN pnpm --filter worker build
+# Build shared libs first, then worker
+RUN pnpm --filter @docflow/proto build && \
+  pnpm --filter @docflow/redis build && \
+  pnpm --filter worker build
 
 # ─── Stage 2: Production ────────────────────────────────
 FROM node:20-alpine AS production
@@ -29,7 +31,7 @@ RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
 # Security: non-root user
 RUN addgroup --system --gid 1001 docflow && \
-    adduser --system --uid 1001 docflow
+  adduser --system --uid 1001 docflow
 
 WORKDIR /app
 
@@ -37,14 +39,21 @@ WORKDIR /app
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml .npmrc ./
 COPY apps/worker/package.json apps/worker/
 
-# Copy proto files (needed at runtime for gRPC)
-COPY libs/ libs/
+# Copy all lib package.json files (needed for pnpm workspace resolution)
+COPY libs/database/package.json libs/database/package.json
+COPY libs/proto/package.json libs/proto/package.json
+COPY libs/redis/package.json libs/redis/package.json
 
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --filter worker... --prod
 
-# Copy built output
+# Copy built app output
 COPY --from=builder /app/apps/worker/dist apps/worker/dist
+
+# Copy built shared libs (runtime resolution)
+COPY --from=builder /app/libs/proto libs/proto
+COPY --from=builder /app/libs/redis/dist libs/redis/dist
+COPY --from=builder /app/libs/database/src libs/database/src
 
 # Switch to non-root user
 USER docflow
