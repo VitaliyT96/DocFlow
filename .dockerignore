@@ -1,0 +1,43 @@
+# ─── Dependencies ────────────────────────────────────────
+node_modules
+**/node_modules
+
+# ─── Build artifacts ─────────────────────────────────────
+dist
+**/dist
+.next
+**/.next
+
+# ─── Git ─────────────────────────────────────────────────
+.git
+.gitignore
+
+# ─── IDE / Editor ────────────────────────────────────────
+.vscode
+.idea
+*.swp
+*.swo
+
+# ─── OS files ────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Environment / Secrets ───────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ─── Docker (prevent recursive context) ─────────────────
+docker-compose*.yml
+Dockerfile
+
+# ─── Misc ────────────────────────────────────────────────
+README.md
+*.md
+!pnpm-workspace.yaml
+LICENSE
+.prettierrc
+.eslintrc*
+coverage
+**/*.test.ts
+**/*.spec.ts
